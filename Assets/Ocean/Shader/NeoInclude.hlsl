@@ -482,6 +482,10 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 	half3 worldNormal = (half3(-i.normalInterpolator.x, NORMAL_POWER, -i.normalInterpolator.y)); //shallow normal
 	half3 worldNormal2 = (half3(-i.normalInterpolator.x, NORMAL_SHARPBIAS, -i.normalInterpolator.y)); //sharp normal
 
+	float2 detailNormal = tex2D(_Map1, i.bumpCoords.xy * 8).xy * 0.5;
+	worldNormal.xz -= detailNormal;
+	worldNormal2.xz -= detailNormal;
+
 #if defined (_WATERWAVE_ON)
 	half k = 0;
 	half2 uv = 1 - (i.bumpCoords.zw - _WaveCoord.xy) * _WaveCoord.zw;
