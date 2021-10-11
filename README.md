@@ -3,7 +3,7 @@
 Require Unity 2020.3.18f1 or later
 
 Compare to URPOcean project(https://github.com/bearworks/URPOcean),
-This project use full FFT methods to build wind dynamic effects with Tessellation shader, BUT also it need more hardware features(#pragma target 4.6 at least) and 
+This project use full FFT methods to build ambient dynamic effects with Tessellation shader, BUT also it need more hardware features(#pragma target 4.6 at least) and 
 Unity recently APIs support, include MRT3(ARGBHalf RenderTexture), TextureFormat ARGBHalf, RGBA64 and AsyncGPUReadback.
 
 
