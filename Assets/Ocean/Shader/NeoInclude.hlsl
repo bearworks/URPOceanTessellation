@@ -258,8 +258,6 @@ inline void FoProjInterpolate(inout half3 i)
 }
 #endif
 
-#if defined(_SSREFLECTION_ON)
-
 void SSRRayConvert(float3 worldPos, out float4 clipPos, out float3 screenPos)
 {
 	clipPos = TransformWorldToHClip(worldPos);
@@ -298,6 +296,8 @@ float3 SSRRayMarch(float3 worldPos, float3 reflection)
 	return float3(0, 0, 0);
 }
 
+
+#if defined(_SSREFLECTION_ON)
 
 half4 GetSSRLighting(float3 worldPos, float3 reflection)
 {
@@ -515,20 +515,16 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 	float fade = Fade(viewVector);
 	viewVector = normalize(viewVector);
 
+	half3 worldUp = WORLD_UP;
 	// shading for fresnel 
-	worldNormal = normalize(lerp(WORLD_UP, worldNormal, fade));
-	worldNormal2 = normalize(lerp(worldNormal2, WORLD_UP, 0));
+	worldNormal = normalize(lerp(worldUp, worldNormal, fade));
+	worldNormal2 = normalize(worldNormal2);
 
 	if (underwater)
 	{
 		worldNormal = -worldNormal;
+		worldUp = -worldUp;
 	}
-
-	half4 rtReflections;
-	if (!underwater)
-		rtReflections = tex2D(_PlanarReflectionTexture, ior + lerp(0, worldNormal.xz * REALTIME_DISTORTION, fade));
-	else
-		rtReflections = _ShallowColor;
 
 	half dotNV = saturate(dot(viewVector, worldNormal));
 
@@ -542,21 +538,29 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 
 	half fresnelFac = saturate(_Fresnel + (1 - _Fresnel) * fresnel);
 
+	half4 rtReflections;
 	if (underwater)
 	{
+		rtReflections = _ShallowColor;
 		fresnelFac = 1 - fresnelFac;
 	}
+	else
+	{
+		rtReflections = tex2D(_PlanarReflectionTexture, ior + lerp(0, worldNormal.xz * REALTIME_DISTORTION, fade));
+		#if defined(_SSREFLECTION_ON)
+			half3 reflectVector = normalize(reflect(-viewVector, normalize(lerp(WORLD_UP, worldNormal, REALTIME_DISTORTION * fade * 2))));
+			half4 SSReflections = GetSSRLighting(i.worldPos.xyz, reflectVector);
+			rtReflections = lerp(rtReflections, SSReflections, SSReflections.a * fresnelFac);
+		#endif	
+	}
 
-#if defined(_SSREFLECTION_ON)
-	half3 reflectVector = normalize(reflect(-viewVector, normalize(lerp(WORLD_UP, worldNormal, REALTIME_DISTORTION * fade * 2))));
-	half4 SSReflections = GetSSRLighting(i.worldPos.xyz, reflectVector);
-	rtReflections = lerp(rtReflections, SSReflections, SSReflections.a * fresnelFac);
-#endif
+	half3 refractVector = normalize(refract(-viewVector, worldNormal, 1 + LERPREFL));
+	float3 uvz = SSRRayMarch(i.worldPos.xyz, refractVector);
 
 	// base, depth & reflection colors
 	half4 baseColor = _BaseColor;
 
-	half2 refrCoord = (i.screenPos.xy) / i.screenPos.w + worldNormal.xz * LERPREFL;
+	half2 refrCoord = lerp((i.screenPos.xy) / i.screenPos.w, uvz.xy, uvz.z * (1 - fresnelFac));
 
 	float depth = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, refrCoord), _ZBufferParams);
 	depth = depth - i.screenPos.w;
@@ -591,7 +595,7 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 
 	// to get an effect when you see through the material
 	// hard coded pow constant
-	float phase = abs(dot(viewVector, normalize(lerp(worldNormal, WORLD_UP, 0.75) + Dir))) * 0.5 + 0.5;
+	float phase = abs(dot(viewVector, normalize(lerp(worldNormal, worldUp, 0.75) + Dir))) * 0.5 + 0.5;
 	float4 InScatter = phase * phase * lerp(0.5, 1, edge);
 	baseColor += InScatter * shallowColor;
 
