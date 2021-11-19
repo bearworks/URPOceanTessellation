@@ -548,19 +548,19 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 	{
 		rtReflections = tex2D(_PlanarReflectionTexture, ior + lerp(0, worldNormal.xz * REALTIME_DISTORTION, fade));
 		#if defined(_SSREFLECTION_ON)
-			half3 reflectVector = normalize(reflect(-viewVector, normalize(lerp(WORLD_UP, worldNormal, REALTIME_DISTORTION * fade * 2))));
+			half3 reflectVector = normalize(reflect(-viewVector, normalize(lerp(worldUp, worldNormal, REALTIME_DISTORTION * fade * 2))));
 			half4 SSReflections = GetSSRLighting(i.worldPos.xyz, reflectVector);
 			rtReflections = lerp(rtReflections, SSReflections, SSReflections.a * fresnelFac);
 		#endif	
 	}
 
-	half3 refractVector = normalize(refract(-viewVector, worldNormal, 1 + LERPREFL));
+	half3 refractVector = normalize(refract(-viewVector, worldNormal, max(1 + LERPREFL, 1)));
 	float3 uvz = SSRRayMarch(i.worldPos.xyz, refractVector);
 
 	// base, depth & reflection colors
 	half4 baseColor = _BaseColor;
 
-	half2 refrCoord = lerp((i.screenPos.xy) / i.screenPos.w, uvz.xy, uvz.z * (1 - fresnelFac));
+	half2 refrCoord = lerp((i.screenPos.xy) / i.screenPos.w, uvz.xy, uvz.z);
 
 	float depth = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, sampler_CameraDepthTexture, refrCoord), _ZBufferParams);
 	depth = depth - i.screenPos.w;
