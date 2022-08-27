@@ -309,7 +309,7 @@ namespace NOcean
             m_map0.wrapMode = TextureWrapMode.Repeat;
             m_map0.anisoLevel = m_anisoLevel;
             m_map0.autoGenerateMips = usemips;
-            //m_map0.useMipMap = usemips; //bug on Some cards
+            m_map0.useMipMap = usemips; //bug on Some cards
             m_map0.hideFlags = HideFlags.DontSave;
             m_map0.Create();
             m_map0.DiscardContents();
@@ -321,7 +321,7 @@ namespace NOcean
             m_map1.wrapMode = TextureWrapMode.Repeat;
             m_map1.anisoLevel = m_anisoLevel;
             m_map1.autoGenerateMips = usemips;
-            //m_map1.useMipMap = usemips; //bug on Some cards
+            m_map1.useMipMap = usemips; //bug on Some cards
             m_map1.hideFlags = HideFlags.DontSave;
             m_map1.Create();
             m_map1.DiscardContents();
