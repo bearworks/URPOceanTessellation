@@ -477,7 +477,7 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 	
 #if defined (_WATERWAVE_ON)
 	half4 waterFX = SAMPLE_TEXTURE2D(_WaterFXMap, sampler_WaterFXMap, ior);
-	slope += half2(1 - waterFX.y, 1 - waterFX.z) - 0.5;
+	slope += half2(1 - waterFX.y, 1 - waterFX.z) * 0.5;
 #endif
 	half3 worldNormal = (half3(-i.normalInterpolator.x, NORMAL_POWER, -i.normalInterpolator.y)); //shallow normal
 	half3 worldNormal2 = (half3(-i.normalInterpolator.x, NORMAL_SHARPBIAS, -i.normalInterpolator.y)); //sharp normal
