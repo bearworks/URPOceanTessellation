@@ -221,7 +221,7 @@ sampler2D _Map1;
 
 sampler2D _PlanarReflectionTexture;
 
-#if defined (_WATERWAVE_ON)
+#if defined (_WATERFX_ON)
 TEXTURE2D(_WaterFXMap); SAMPLER(sampler_WaterFXMap);
 #endif
 
@@ -421,7 +421,7 @@ v2f_MQ vert_MQ(TessellationControlPoint vert)
 	half4 screenUV = ComputeScreenPos(TransformWorldToHClip(worldSpaceVertex));
 	screenUV.xyz /= screenUV.w;
 	
-#if defined (_WATERWAVE_ON)
+#if defined (_WATERFX_ON)
 	half4 waterFX = SAMPLE_TEXTURE2D_LOD(_WaterFXMap, sampler_WaterFXMap, screenUV.xy, 0);
 	worldSpaceVertex.y += (waterFX.w * 2 - 1) ;
 #endif
@@ -475,8 +475,9 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 	half2 slope = 0;
 	half4 c = 0;
 	
-#if defined (_WATERWAVE_ON)
-	half4 waterFX = SAMPLE_TEXTURE2D(_WaterFXMap, sampler_WaterFXMap, ior);
+	half4 waterFX = half4(0, 0.5, 0.5, 0.5);
+#if defined (_WATERFX_ON)
+	waterFX = SAMPLE_TEXTURE2D(_WaterFXMap, sampler_WaterFXMap, ior);
 	slope += half2(1 - waterFX.y, 1 - waterFX.z) - 0.5;
 #endif
 	half3 worldNormal = (half3(-i.normalInterpolator.x, NORMAL_POWER, -i.normalInterpolator.y)); //shallow normal
@@ -486,8 +487,8 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 	worldNormal.xz -= detailNormal;
 	worldNormal2.xz -= detailNormal;
 
-#if defined (_WATERWAVE_ON)
 	half k = 0;
+#if defined (_WATERWAVE_ON)
 	half2 uv = 1 - (i.bumpCoords.zw - _WaveCoord.xy) * _WaveCoord.zw;
 	half2 ba = tex2D(_WaveTex, uv).rg;
 	ba *= step(0, uv.x);
@@ -609,7 +610,7 @@ half4 frag_MQ(v2f_MQ i, float facing : VFACE) : SV_Target
 
 	half height = i.screenPos.z;
 	half3 foamMap = SAMPLE_TEXTURE2D(_FoamMask, sampler_FoamMask, i.bumpCoords.xy * _FoamMask_ST.xy + worldNormal.xz * _Foam.w * fresnelFac * height).rgb;
-#if defined (_WATERWAVE_ON)
+#if defined (_WATERWAVE_ON) || defined (_WATERFX_ON)
 	half fxFoam = max(length(waterFX.a * 2 - 1) * foamMap.g * edge, max(waterFX.r, k) * foamMap.r) * 2;
 #else
 	half fxFoam = foamMap.g * edge;
