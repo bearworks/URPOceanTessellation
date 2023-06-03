@@ -1,6 +1,6 @@
 # URPOceanTessellation
 
-Require Unity 2020.3.18f1 or later
+Require Unity 2020.3+ or 2021.3+ 
 
 Compare to URPOcean project(https://github.com/bearworks/URPOcean).
 This project use full FFT methods to build more wave effects with Tessellation shader, BUT also it need more hardware features(#pragma target 4.6 at least) and 
